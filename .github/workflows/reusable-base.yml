@@ -42,6 +42,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs:
       - resolve_inputs
+    if: ${{ always() }}
 
     strategy:
       fail-fast: false
