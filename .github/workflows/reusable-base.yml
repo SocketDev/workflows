@@ -1,0 +1,84 @@
+name: Base CI
+
+on:
+  workflow_call:
+    inputs:
+      npm-build-script:
+        description: 'The name of any npm script to run before the test.'
+        required: false
+        type: string
+      npm-test-script:
+        description: 'The name of the npm script that runs the test.'
+        required: true
+        type: string
+      os:
+        description: 'A comma separated list of operating systems to test on.'
+        required: false
+        type: string
+      node-versions:
+        description: 'A comma separated list of Node versions to test with.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  resolve_inputs:
+    name: Resolving inputs
+    runs-on: ubuntu-latest
+    if: ${{ inputs.os || inputs.node-versions}}
+    outputs:
+      os: ${{ steps.split-os.outputs.splitted }}
+      nodeVersions: ${{ steps.split-node-versions.outputs.splitted }}
+    steps:
+      - id: split-os
+        run: echo "splitted=$(echo '${{ inputs.os }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
+      - id: split-node-versions
+        run: echo "splitted=$(echo '${{ inputs.node-versions }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
+
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    needs:
+      - resolve_inputs
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node_version: ${{ fromJson(needs.resolve_inputs.outputs.nodeVersions || '"lts/*"') }}
+        os: ${{ fromJson(needs.resolve_inputs.outputs.os || '"ubuntu-latest"') }}
+
+    steps:
+    - name: Checkout code, including submodules
+      uses: actions/checkout@v3
+      with:
+        submodules: true
+        token: ${{ secrets.SOCKET_BOT_READONLY_PAT }}
+
+    - name: Use Node.js ${{ matrix.node_version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node_version }}
+
+    - name: Get npm cache directory
+      id: npm-cache-dir
+      run: |
+        echo "::set-output name=dir::$(npm config get cache)"
+    - uses: actions/cache@v3
+      with:
+        path: ${{ steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - run: npm ci --no-audit --no-fund
+      env:
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+    - name: Build
+      run: npm run ${{ inputs.npm-build-script }}
+      if: ${{ inputs.npm-build-script }}
+
+    - name: Test
+      run: npm run ${{ inputs.npm-test-script }}
