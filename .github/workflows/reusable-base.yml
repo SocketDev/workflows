@@ -47,8 +47,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node_version: ${{ fromJson(needs.resolve_inputs.outputs.nodeVersions || '"lts/*"') }}
-        os: ${{ fromJson(needs.resolve_inputs.outputs.os || '"ubuntu-latest"') }}
+        node_version: ${{ fromJson(needs.resolve_inputs.outputs.nodeVersions || '["lts/*"]') }}
+        os: ${{ fromJson(needs.resolve_inputs.outputs.os || '["ubuntu-latest"]') }}
 
     steps:
     - name: Checkout code, including submodules
