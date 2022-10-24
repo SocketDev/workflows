@@ -53,9 +53,14 @@ jobs:
     steps:
     - name: Checkout code, including submodules
       uses: actions/checkout@v3
+      if: ${{ secrets.SOCKET_BOT_READONLY_PAT }}
       with:
         submodules: true
-        token: ${{ secrets.SOCKET_BOT_READONLY_PAT || secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.SOCKET_BOT_READONLY_PAT }}
+
+    - name: Checkout code, without submodules
+      if: ${{ !secrets.SOCKET_BOT_READONLY_PAT }}
+      uses: actions/checkout@v3
 
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v3
