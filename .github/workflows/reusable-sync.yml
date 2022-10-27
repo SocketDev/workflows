@@ -46,20 +46,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - name: Fetch ${{ inputs.url }}
         run: curl --fail "${{ inputs.url }}" > ${{ inputs.path }}
+
       - name: Set up Node.js
         if: ${{ inputs.npm-post-sync-script }}
         uses: actions/setup-node@v3
         with:
           node-version: lts/*
-          cache: 'npm'
+
+      - name: Get npm cache directory
+        id: npm-cache-dir
+        run: |
+          echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v3
+        with:
+          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install npm dependencies
         if: ${{ inputs.npm-post-sync-script }}
         run: npm ci --no-audit --no-fund
+
       - name: Run post-sync npm script
         if: ${{ inputs.npm-post-sync-script }}
         run: npm run ${{ inputs.npm-post-sync-script }}
+
       - name: Add all changes
         id: add-changes
         continue-on-error: true
@@ -69,9 +85,11 @@ jobs:
           git checkout -b ${{ inputs.branch-name }}
           git add .
           git commit -m "${{ inputs.commit-message }}"
+
       - name: Push the changes to the dedicated branch
         if: ${{ steps.add-changes.outcome == 'success' }}
         run: git push origin ${{ inputs.branch-name }} -f
+
       - name: Open a PR for the sync
         if: ${{ steps.add-changes.outcome == 'success' }}
         continue-on-error: true
