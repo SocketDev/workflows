@@ -1,5 +1,9 @@
 name: Sync file
 
+# Be aware that the PR opened by this action won't run any actions itself because of
+# limitations within GitHub Actions where an Action can't cause another Action to run.
+# See eg: https://github.com/orgs/community/discussions/25332#discussioncomment-3247510
+
 on:
   workflow_call:
     inputs:
