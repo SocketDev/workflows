@@ -16,6 +16,10 @@ See [reusable-sync.yml](./.github/workflows/reusable-sync.yml)
 
 Licensed under [MIT](./LICENSE).
 
+## Used by eg.
+
+* [`SocketDev/socket-sdk-js`](https://github.com/SocketDev/socket-sdk-js)
+
 ## Similar projects
 
 * [`fastify/workflows`](https://github.com/fastify/workflows) – reusable workflows for use in the Fastify organization 
