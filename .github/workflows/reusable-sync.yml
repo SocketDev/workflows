@@ -61,7 +61,7 @@ jobs:
           node-version: lts/*
 
       - name: Determine npm cache directory windows
-        id: npm-cache-dir
+        id: npm-cache-dir-windows
         if: runner.os == 'Windows'
         run: echo "dir=$(npm config get cache)" >> $env:GITHUB_OUTPUT
       - name: Determine npm cache directory non-windows
@@ -71,7 +71,7 @@ jobs:
 
       - uses: actions/cache@v3
         with:
-          path: ${{ steps.npm-cache-dir.outputs.dir }}
+          path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
