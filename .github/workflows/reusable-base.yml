@@ -11,6 +11,11 @@ on:
         description: 'The name of the npm script that runs the test.'
         required: true
         type: string
+      no-lockfile:
+        description: 'Whether to expect a lockfile or not'
+        required: false
+        default: false
+        type: boolean
       submodules:
         description: 'Whether to use submodules or not'
         required: false
@@ -85,6 +90,12 @@ jobs:
           ${{ runner.os }}-node-
 
     - run: npm ci --no-audit --no-fund
+      if: ${{ !inputs.no-lockfile }}
+      env:
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+    - run: npm install --no-audit --no-fund
+      if: ${{ inputs.no-lockfile }}
       env:
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
