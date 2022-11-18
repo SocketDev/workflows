@@ -86,10 +86,21 @@ jobs:
       if: runner.os != 'Windows'
       run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
-    - uses: actions/cache@v3
+    - name: Restore cache using package-lock.json hash
+      uses: actions/cache@v3
+      if: ${{ !inputs.no-lockfile }}
       with:
         path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
         key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+
+    - name: Restore cache using package.json hash
+      uses: actions/cache@v3
+      if: ${{ inputs.no-lockfile }}
+      with:
+        path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
+        key: ${{ runner.os }}-node-${{ hashFiles('package.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
 
