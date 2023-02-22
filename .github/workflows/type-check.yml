@@ -1,0 +1,128 @@
+name: Type Checks
+
+on:
+  workflow_call:
+    inputs:
+      no-lockfile:
+        description: 'Whether to expect a lockfile or not'
+        required: false
+        default: false
+        type: boolean
+      ts-prebuild-script:
+        description: 'The npm script used to prebuild.'
+        required: false
+        type: string
+      ts-versions:
+        description: 'A comma separated list of TypeScript versions that you want to test against.'
+        required: false
+        default: '4.5,4.6,4.7,4.8'
+        type: string
+      ts-libs:
+        description: 'A semi-colon separated list of TypeScript libs that you want to test against.'
+        required: false
+        default: 'es2020;esnext'
+        type: string
+      ts-projects:
+        description: 'A comma separated list of TypeScript project that you want to test.'
+        required: false
+        default: '.'
+        type: string
+      ts-working-directory:
+        description: 'Where the ts-projects are relative to.'
+        required: false
+        default: '.'
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  resolve_inputs:
+    name: Resolving inputs
+    runs-on: ubuntu-latest
+    outputs:
+      tsVersions: ${{ steps.split-ts-versions.outputs.splitted }}
+      tsLibs: ${{ steps.split-ts-libs.outputs.splitted }}
+      tsProjects: ${{ steps.split-ts-projects.outputs.splitted }}
+    steps:
+      - id: split-ts-versions
+        run: echo "splitted=$(echo '${{ inputs.ts-versions }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
+      - id: split-ts-libs
+        run: echo "splitted=$(echo '${{ inputs.ts-libs }}' | jq -R -c 'split(";")')" >> $GITHUB_OUTPUT
+      - id: split-ts-projects
+        run: echo "splitted=$(echo '${{ inputs.ts-projects }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
+  test:
+    name: TS ${{ matrix.ts_version }}, "${{ matrix.ts_lib }}", ${{ inputs.ts-working-directory }}/${{ matrix.ts_project }}
+    runs-on: ubuntu-latest
+    needs:
+      - resolve_inputs
+    strategy:
+      fail-fast: false
+      matrix:
+        node_version: [lts/*]
+        ts_version: ${{ fromJson(needs.resolve_inputs.outputs.tsVersions) }}
+        ts_lib: ${{ fromJson(needs.resolve_inputs.outputs.tsLibs) }}
+        ts_project: ${{ fromJson(needs.resolve_inputs.outputs.tsProjects) }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node_version }}
+
+      - name: Determine npm cache directory windows
+        id: npm-cache-dir-windows
+        if: runner.os == 'Windows'
+        run: echo "dir=$(npm config get cache)" >> $env:GITHUB_OUTPUT
+      - name: Determine npm cache directory non-windows
+        id: npm-cache-dir
+        if: runner.os != 'Windows'
+        run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
+
+      - name: Restore cache using package-lock.json hash
+        uses: actions/cache@v3
+        if: ${{ !inputs.no-lockfile }}
+        with:
+          path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Restore cache using package.json hash
+        uses: actions/cache@v3
+        if: ${{ inputs.no-lockfile }}
+        with:
+          path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ hashFiles('package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - run: npm ci --no-audit --no-fund
+        if: ${{ !inputs.no-lockfile }}
+
+      - run: npm install --no-audit --no-fund
+        if: ${{ inputs.no-lockfile }}
+
+      - name: prebuild types
+        if: inputs.ts-prebuild-script
+        run: npm run ${{ inputs.ts-prebuild-script }}
+
+      - name: npm install working directory
+        if: inputs.ts-working-directory != '.'
+        run: npm install --ignore-scripts
+        working-directory: ${{ inputs.ts-working-directory }}
+
+      - name: install typescript version ${{ matrix.ts_version }}
+        run: npm install --force typescript@${{ matrix.ts_version }}
+        working-directory: ${{ inputs.ts-working-directory }}
+      - name: show installed typescript version
+        run: npm list typescript --depth=0
+        working-directory: ${{ inputs.ts-working-directory }}
+
+      - name: test using lib "${{ matrix.ts_lib }}"
+        run: npx tsc -p ${{ matrix.ts_project }} --lib ${{ matrix.ts_lib }}
+        working-directory: ${{ inputs.ts-working-directory }}
