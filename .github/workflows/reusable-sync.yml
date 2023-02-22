@@ -106,22 +106,23 @@ jobs:
         if: ${{ inputs.npm-post-sync-script }}
         run: npm run ${{ inputs.npm-post-sync-script }}
 
-      - name: Add all changes
-        id: add-changes
-        continue-on-error: true
+      # Inspired by https://github.com/actions/toolkit/blob/0db3029fcfcb1393a2b3ccd14caecd7a3460af4e/.github/workflows/update-github.yaml#L22-L23
+      # And by https://github.com/actions/deploy-pages/blob/ff669327f73994ba35f45d1cd2fc81d82d1c852c/.github/workflows/rebuild-dependabot-prs.yml#L43-L44
+      - name: Push all changes
+        id: push-changes
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
+          echo "::set-output name=createPR::true"
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b ${{ inputs.branch-name }}
           git add .
           git commit -m "${{ inputs.commit-message }}"
-
-      - name: Push the changes to the dedicated branch
-        if: ${{ steps.add-changes.outcome == 'success' }}
-        run: git push origin ${{ inputs.branch-name }} -f
+          git push origin ${{ inputs.branch-name }} -fu
+          fi
 
       - name: Open a PR for the sync
-        if: ${{ steps.add-changes.outcome == 'success' }}
+        if: ${{steps.push-changes.outputs.createPR}}
         continue-on-error: true
         run: gh pr create --head ${{ inputs.branch-name }} --title " ${{ inputs.pr-title }}" --body "${{ inputs.pr-body }}"
         env:
