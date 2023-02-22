@@ -12,12 +12,18 @@ See [reusable-base.yml](./.github/workflows/reusable-base.yml)
 
 See [reusable-sync.yml](./.github/workflows/reusable-sync.yml)
 
+### Type Check
+
+See [type-check.yml](./.github/workflows/type-check.yml)
+
 ## License
 
 Licensed under [MIT](./LICENSE).
 
 ## Used by eg.
 
+* [`SocketDev/socket-cli-js`](https://github.com/SocketDev/socket-cli-js)
+* [`SocketDev/socket-config-js`](https://github.com/SocketDev/socket-config-js)
 * [`SocketDev/socket-sdk-js`](https://github.com/SocketDev/socket-sdk-js)
 
 ## Similar projects
