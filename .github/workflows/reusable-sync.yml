@@ -113,14 +113,16 @@ jobs:
       - name: Push all changes
         id: push-changes
         run: |
-          if [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
-          echo "createPR=true" >> $GITHUB_OUTPUT
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b ${{ inputs.branch-name }}
-          git add .
-          git commit -m "${{ inputs.commit-message }}"
-          git push origin ${{ inputs.branch-name }} -fu --no-verify
+          if [[ "$(git status --porcelain)" != "" ]]; then
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git checkout -b ${{ inputs.branch-name }}
+            git add .
+            if (! git show-ref origin/${{ inputs.branch-name }} -q) || [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
+              echo "createPR=true" >> $GITHUB_OUTPUT
+              git commit -m "${{ inputs.commit-message }}"
+              git push origin ${{ inputs.branch-name }} -fu --no-verify
+            fi
           fi
 
       - name: Open a PR for the sync
