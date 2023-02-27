@@ -23,6 +23,11 @@ on:
         description: 'The repo name of a GitHub repository to sync a release from. Alternative to url sync'
         required: false
         type: string
+      gh-release-subpath:
+        description: 'If only syncing a subpath of the release, then specify that path here'
+        required: false
+        default: ''
+        type: string
       branch-name:
         description: 'The name of the branch to create'
         required: false
@@ -130,7 +135,9 @@ jobs:
           gh release download --repo "${{ inputs.gh-release-org }}/${{ inputs.gh-release-repo }}" --archive tar.gz
           tar -xvf ${{ inputs.gh-release-repo }}-*.tar.gz
           rm -rf ${{ inputs.path }}
-          cp -Rv ${{ inputs.gh-release-repo }}-*/json ${{ inputs.path }}
+          cp -Rv ${{ inputs.gh-release-repo }}-*/${{ inputs.gh-release-subpath }} ${{ inputs.path }}
+          rm ${{ inputs.gh-release-repo }}-*.tar.gz
+          rm -rf ${{ inputs.gh-release-repo }}-*/
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
