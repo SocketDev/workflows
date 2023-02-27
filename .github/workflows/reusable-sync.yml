@@ -128,9 +128,9 @@ jobs:
         if: inputs.gh-release-org && inputs.gh-release-repo && inputs.path && !inputs.url
         run: |
           gh release download --repo "${{ inputs.gh-release-org }}/${{ inputs.gh-release-repo }}" --archive tar.gz
-          tar -xvf ${{ inputs.release-from-repo }}-*.tar.gz
+          tar -xvf ${{ inputs.gh-release-repo }}-*.tar.gz
           rm -rf ${{ inputs.path }}
-          cp -Rv ${{ inputs.release-from-repo }}-*/json ${{ inputs.path }}
+          cp -Rv ${{ inputs.gh-release-repo }}-*/json ${{ inputs.path }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
