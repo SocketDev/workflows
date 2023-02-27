@@ -16,11 +16,6 @@ on:
         required: false
         default: false
         type: boolean
-      submodules:
-        description: 'Whether to use submodules or not'
-        required: false
-        default: false
-        type: boolean
       os:
         description: 'A comma separated list of operating systems to test on.'
         required: false
@@ -63,10 +58,6 @@ jobs:
     steps:
     - name: Checkout code, including submodules
       uses: actions/checkout@v3
-      if: ${{ inputs.submodules }}
-      with:
-        submodules: true
-        token: ${{ secrets.SOCKET_BOT_READONLY_PAT }}
 
     - name: Checkout code, without submodules
       if: ${{ !inputs.submodules }}
