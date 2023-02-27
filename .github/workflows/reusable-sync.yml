@@ -7,8 +7,9 @@ name: Sync file
 on:
   workflow_call:
     secrets:
-      GITHUB_TOKEN:
-        required: true
+      GITHUB_TOKEN_OVERRIDE:
+        description: 'If you need to override the GITHUB_TOKEN used with the "gh" cli, then do so with this one'
+        required: false
     inputs:
       url:
         description: 'The URL to sync from'
@@ -142,7 +143,7 @@ jobs:
           rm ${{ inputs.gh-release-repo }}-*.tar.gz
           rm -rf ${{ inputs.gh-release-repo }}-*/
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN_OVERRIDE || secrets.GITHUB_TOKEN }}
 
       - name: Fetch URL data
         if: inputs.url && inputs.path
@@ -176,4 +177,4 @@ jobs:
         continue-on-error: true
         run: gh pr create --head ${{ inputs.branch-name }} --title " ${{ inputs.pr-title }}" --body "${{ inputs.pr-body }}"
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN_OVERRIDE || secrets.GITHUB_TOKEN }}
