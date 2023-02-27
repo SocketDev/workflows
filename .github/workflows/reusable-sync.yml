@@ -9,11 +9,11 @@ on:
     inputs:
       url:
         description: 'The URL to sync'
-        required: true
+        required: false
         type: string
       path:
         description: 'The path to sync it to'
-        required: true
+        required: false
         type: string
       branch-name:
         description: 'The name of the branch to create'
@@ -35,8 +35,12 @@ on:
         required: false
         default: "fix: sync file"
         type: string
+      npm-pre-sync-script:
+        description: 'The name of a script to run pre URL-sync.'
+        required: false
+        type: string
       npm-post-sync-script:
-        description: 'The name of a script to run post sync.'
+        description: 'The name of a script to run post URL-sync.'
         required: false
         type: string
       no-lockfile:
@@ -54,31 +58,33 @@ jobs:
     name: Fetch and sync
     runs-on: ubuntu-latest
     steps:
+      # Base setup
+
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
-
-      - name: Fetch ${{ inputs.url }}
-        run: curl --fail "${{ inputs.url }}" > ${{ inputs.path }}
+          fetch-depth: 0 # As we want to check if the remote branch already exists and is up to date
 
       - name: Set up Node.js
-        if: ${{ inputs.npm-post-sync-script }}
+        if: inputs.npm-pre-sync-script || inputs.npm-post-sync-script
         uses: actions/setup-node@v3
         with:
           node-version: lts/*
 
+      # Cached npm installation
+
       - name: Determine npm cache directory windows
         id: npm-cache-dir-windows
-        if: runner.os == 'Windows'
+        if: (inputs.npm-pre-sync-script || inputs.npm-post-sync-script) && runner.os == 'Windows'
         run: echo "dir=$(npm config get cache)" >> $env:GITHUB_OUTPUT
+
       - name: Determine npm cache directory non-windows
         id: npm-cache-dir
-        if: runner.os != 'Windows'
+        if: (inputs.npm-pre-sync-script || inputs.npm-post-sync-script) && runner.os != 'Windows'
         run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
       - name: Restore cache using package-lock.json hash
         uses: actions/cache@v3
-        if: ${{ !inputs.no-lockfile }}
+        if: (inputs.npm-pre-sync-script || inputs.npm-post-sync-script) && !inputs.no-lockfile
         with:
           path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
@@ -87,7 +93,7 @@ jobs:
 
       - name: Restore cache using package.json hash
         uses: actions/cache@v3
-        if: ${{ inputs.no-lockfile }}
+        if: (inputs.npm-pre-sync-script || inputs.npm-post-sync-script) && inputs.no-lockfile
         with:
           path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
           key: ${{ runner.os }}-node-${{ hashFiles('package.json') }}
@@ -95,22 +101,34 @@ jobs:
             ${{ runner.os }}-node-
 
       - run: npm ci --no-audit --no-fund
-        if: ${{ inputs.npm-post-sync-script && !inputs.no-lockfile }}
+        if: (inputs.npm-pre-sync-script || inputs.npm-post-sync-script) && !inputs.no-lockfile
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
       - run: npm install --no-audit --no-fund
-        if: ${{ inputs.npm-post-sync-script && inputs.no-lockfile }}
+        if: (inputs.npm-pre-sync-script || inputs.npm-post-sync-script) && inputs.no-lockfile
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
+      # Actual syncing
+
+      - name: Run pre-sync npm script
+        if: inputs.npm-pre-sync-script
+        run: npm run ${{ inputs.npm-pre-sync-script }}
+
+      - name: Fetch data
+        if: inputs.url && inputs.path
+        run: curl --fail "${{ inputs.url }}" > ${{ inputs.path }}
+
       - name: Run post-sync npm script
-        if: ${{ inputs.npm-post-sync-script }}
+        if: inputs.npm-post-sync-script
         run: npm run ${{ inputs.npm-post-sync-script }}
+
+      # Commit, push and open a PR if that's the need
 
       # Inspired by https://github.com/actions/toolkit/blob/0db3029fcfcb1393a2b3ccd14caecd7a3460af4e/.github/workflows/update-github.yaml#L22-L23
       # And by https://github.com/actions/deploy-pages/blob/ff669327f73994ba35f45d1cd2fc81d82d1c852c/.github/workflows/rebuild-dependabot-prs.yml#L43-L44
-      - name: Push all changes
+      - name: Commit and push any changes
         id: push-changes
         run: |
           if [[ "$(git status --porcelain)" != "" ]]; then
@@ -126,7 +144,7 @@ jobs:
           fi
 
       - name: Open a PR for the sync
-        if: ${{steps.push-changes.outputs.createPR}}
+        if: steps.push-changes.outputs.createPR
         continue-on-error: true
         run: gh pr create --head ${{ inputs.branch-name }} --title " ${{ inputs.pr-title }}" --body "${{ inputs.pr-body }}"
         env:
