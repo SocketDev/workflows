@@ -6,6 +6,9 @@ name: Sync file
 
 on:
   workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
     inputs:
       url:
         description: 'The URL to sync from'
