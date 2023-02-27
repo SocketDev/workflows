@@ -8,11 +8,19 @@ on:
   workflow_call:
     inputs:
       url:
-        description: 'The URL to sync'
+        description: 'The URL to sync from'
         required: false
         type: string
       path:
         description: 'The path to sync it to'
+        required: false
+        type: string
+      gh-release-org:
+        description: 'The org name of a GitHub repository to sync a release from. Alternative to url sync'
+        required: false
+        type: string
+      gh-release-repo:
+        description: 'The repo name of a GitHub repository to sync a release from. Alternative to url sync'
         required: false
         type: string
       branch-name:
@@ -116,7 +124,17 @@ jobs:
         if: inputs.npm-pre-sync-script
         run: npm run ${{ inputs.npm-pre-sync-script }}
 
-      - name: Fetch data
+      - name: Fetch GitHub repository release data
+        if: inputs.gh-release-org && inputs.gh-release-repo && inputs.path && !inputs.url
+        run: |
+          gh release download --repo "${{ inputs.gh-release-org }}/${{ inputs.gh-release-repo }}" --archive tar.gz --dir dist
+          tar -xvf dist/${{ inputs.release-from-repo }}-*.tar.gz -C dist
+          rm -rf ${{ inputs.path }}
+          cp -Rv dist/${{ inputs.release-from-repo }}-*/json ${{ inputs.path }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch URL data
         if: inputs.url && inputs.path
         run: curl --fail "${{ inputs.url }}" > ${{ inputs.path }}
 
