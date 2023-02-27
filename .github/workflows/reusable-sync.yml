@@ -65,6 +65,11 @@ on:
         required: false
         default: false
         type: boolean
+      node-version:
+        description: 'The node-version to use'
+        required: false
+        default: 'lts/*'
+        type: string
 
 permissions:
   contents: write
@@ -85,7 +90,7 @@ jobs:
         if: inputs.npm-pre-sync-script || inputs.npm-post-sync-script
         uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version: ${{ inputs.node-version }}
 
       # Cached npm installation
 
