@@ -127,10 +127,10 @@ jobs:
       - name: Fetch GitHub repository release data
         if: inputs.gh-release-org && inputs.gh-release-repo && inputs.path && !inputs.url
         run: |
-          gh release download --repo "${{ inputs.gh-release-org }}/${{ inputs.gh-release-repo }}" --archive tar.gz --dir dist
-          tar -xvf dist/${{ inputs.release-from-repo }}-*.tar.gz -C dist
+          gh release download --repo "${{ inputs.gh-release-org }}/${{ inputs.gh-release-repo }}" --archive tar.gz
+          tar -xvf ${{ inputs.release-from-repo }}-*.tar.gz
           rm -rf ${{ inputs.path }}
-          cp -Rv dist/${{ inputs.release-from-repo }}-*/json ${{ inputs.path }}
+          cp -Rv ${{ inputs.release-from-repo }}-*/json ${{ inputs.path }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
