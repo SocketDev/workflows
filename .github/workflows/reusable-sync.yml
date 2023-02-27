@@ -162,7 +162,7 @@ jobs:
         run: |
           if [[ "$(git status --porcelain)" != "" ]]; then
             git config --global user.name "github-actions[bot]"
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git checkout -b ${{ inputs.branch-name }}
             git add .
             if (! git show-ref origin/${{ inputs.branch-name }} -q) || [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
