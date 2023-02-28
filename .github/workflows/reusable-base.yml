@@ -77,23 +77,28 @@ jobs:
       if: runner.os != 'Windows'
       run: echo "dir=$(npm config get cache)" >> $GITHUB_OUTPUT
 
+    # New prefix generated every 120 days, to ensure npm cache doesn't grow too large
+    - name: Get npm cache timed expiration
+      id: npm-timed-expiration
+      run: echo "prefix=$(( $(date +%s) / 60 / 60 / 24 / 120 ))" >> $GITHUB_OUTPUT
+
     - name: Restore cache using package-lock.json hash
       uses: actions/cache@v3
       if: ${{ !inputs.no-lockfile }}
       with:
         path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ steps.npm-timed-expiration.outputs.prefix }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-
+          ${{ runner.os }}-node-${{ steps.npm-timed-expiration.outputs.prefix }}-
 
     - name: Restore cache using package.json hash
       uses: actions/cache@v3
       if: ${{ inputs.no-lockfile }}
       with:
         path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
-        key: ${{ runner.os }}-node-${{ hashFiles('package.json') }}
+        key: ${{ runner.os }}-node-${{ steps.npm-timed-expiration.outputs.prefix }}-${{ hashFiles('package.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-
+          ${{ runner.os }}-node-${{ steps.npm-timed-expiration.outputs.prefix }}-
 
     - run: npm ci --no-audit --no-fund
       if: ${{ !inputs.no-lockfile }}
