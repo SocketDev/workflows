@@ -52,6 +52,16 @@ on:
         required: false
         default: "fix: sync file"
         type: string
+      commit-user:
+        description: 'The name to use in the commit.'
+        required: false
+        default: "github-actions[bot]"
+        type: string
+      commit-email:
+        description: 'The email to use in the commit.'
+        required: false
+        default: "41898282+github-actions[bot]@users.noreply.github.com"
+        type: string
       npm-pre-sync-script:
         description: 'The name of a script to run pre URL-sync.'
         required: false
@@ -166,8 +176,8 @@ jobs:
         id: push-changes
         run: |
           if [[ "$(git status --porcelain)" != "" ]]; then
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "${{ inputs.commit-user }}"
+            git config --global user.email "${{ inputs.commit-email }}"
             git checkout -b ${{ inputs.branch-name }}
             git add .
             if (! git show-ref origin/${{ inputs.branch-name }} -q) || [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
@@ -176,6 +186,8 @@ jobs:
               git push origin ${{ inputs.branch-name }} -fu --no-verify
             fi
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN_OVERRIDE || secrets.GITHUB_TOKEN }}
 
       - name: Open a PR for the sync
         if: steps.push-changes.outputs.createPR
