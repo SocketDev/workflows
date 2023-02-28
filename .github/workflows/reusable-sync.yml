@@ -148,7 +148,7 @@ jobs:
           rm ${{ inputs.gh-release-repo }}-*.tar.gz
           rm -rf ${{ inputs.gh-release-repo }}-*/
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN_OVERRIDE || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch URL data
         if: inputs.url && inputs.path
