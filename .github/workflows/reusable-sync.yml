@@ -80,6 +80,11 @@ on:
         required: false
         default: 'lts/*'
         type: string
+      create-branch-if-needed:
+        description: 'Create a branch if one is missing'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -181,10 +186,12 @@ jobs:
             git config --global user.email "${{ inputs.commit-email }}"
             git checkout -b ${{ inputs.branch-name }}
             git add .
-            if (! git show-ref origin/${{ inputs.branch-name }} -q) || [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
-              echo "createPR=true" >> $GITHUB_OUTPUT
-              git commit -m "${{ inputs.commit-message }}"
-              git push origin ${{ inputs.branch-name }} -fu --no-verify
+            if ${{ inputs.create-branch-if-needed }} || (git show-ref origin/${{ inputs.branch-name }} -q); then
+              if (! git show-ref origin/${{ inputs.branch-name }} -q) || [[ "$(git diff origin/${{ inputs.branch-name }} --stat)" != "" ]]; then
+                echo "createPR=true" >> $GITHUB_OUTPUT
+                git commit -m "${{ inputs.commit-message }}"
+                git push origin ${{ inputs.branch-name }} -fu --no-verify
+              fi
             fi
           fi
 
