@@ -3,6 +3,15 @@ name: Base CI
 on:
   workflow_call:
     inputs:
+      no-lockfile:
+        default: false
+        description: 'Whether to expect a lockfile or not'
+        required: false
+        type: boolean
+      node-versions:
+        description: 'A comma separated list of Node versions to test with.'
+        required: false
+        type: string
       npm-build-script:
         description: 'The name of any npm script to run before the test.'
         required: false
@@ -11,17 +20,13 @@ on:
         description: 'The name of the npm script that runs the test.'
         required: true
         type: string
-      no-lockfile:
-        description: 'Whether to expect a lockfile or not'
-        required: false
-        default: false
-        type: boolean
       os:
         description: 'A comma separated list of operating systems to test on.'
         required: false
         type: string
-      node-versions:
-        description: 'A comma separated list of Node versions to test with.'
+      submodules:
+        default: false
+        description: 'From actions/checkout@v3'
         required: false
         type: string
 
@@ -56,12 +61,11 @@ jobs:
         os: ${{ fromJson(needs.resolve_inputs.outputs.os || '["ubuntu-latest"]') }}
 
     steps:
-    - name: Checkout code, including submodules
+    - name: Checkout code
       uses: actions/checkout@v3
-
-    - name: Checkout code, without submodules
-      if: ${{ !inputs.submodules }}
-      uses: actions/checkout@v3
+      with:
+        submodules: ${{ input.submodules }
+        
 
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v3
