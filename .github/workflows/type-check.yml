@@ -77,7 +77,7 @@ jobs:
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3
         with:
-          submodules: ${{ input.submodules }
+          submodules: ${{ input.submodules }}
           node-version: ${{ matrix.node_version }}
 
       - name: Determine npm cache directory windows
