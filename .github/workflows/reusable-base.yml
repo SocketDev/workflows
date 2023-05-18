@@ -64,7 +64,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       with:
-        submodules: ${{ input.submodules }
+        submodules: ${{ input.submodules }}
         
 
     - name: Use Node.js ${{ matrix.node_version }}
