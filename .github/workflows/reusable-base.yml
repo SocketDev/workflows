@@ -120,3 +120,8 @@ jobs:
 
     - name: Test
       run: npm run ${{ inputs.npm-test-script }}
+      env:
+        METADATA_AUTH_TOKEN: ${{ secrets.METADATA_AUTH_TOKEN }}
+        S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+        S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
