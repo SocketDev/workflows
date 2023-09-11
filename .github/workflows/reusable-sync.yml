@@ -97,7 +97,7 @@ jobs:
     steps:
       # Base setup
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # As we want to check if the remote branch already exists and is up to date
           token: ${{ secrets.GITHUB_TOKEN_OVERRIDE || secrets.GITHUB_TOKEN }}

@@ -26,7 +26,7 @@ on:
         type: string
       submodules:
         default: false
-        description: 'From actions/checkout@v3'
+        description: 'From actions/checkout@v4'
         required: false
         type: string
 
@@ -62,7 +62,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         submodules: ${{ inputs.submodules }}
         
