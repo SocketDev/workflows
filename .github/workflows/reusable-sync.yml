@@ -97,14 +97,14 @@ jobs:
     steps:
       # Base setup
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # As we want to check if the remote branch already exists and is up to date
           token: ${{ secrets.GITHUB_TOKEN_OVERRIDE || secrets.GITHUB_TOKEN }}
 
       - name: Set up Node.js
         if: inputs.npm-pre-sync-script || inputs.npm-post-sync-script
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
 
