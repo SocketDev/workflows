@@ -45,7 +45,7 @@ jobs:
       - id: split-os
         run: echo "splitted=$(echo '${{ inputs.os || 'ubuntu-latest' }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
       - id: split-node-versions
-        run: echo "splitted=$(echo '${{ inputs.node-versions || '18' }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
+        run: echo "splitted=$(echo '${{ inputs.node-versions || '20' }}' | jq -R -c 'split(",")')" >> $GITHUB_OUTPUT
 
   test:
     name: Test
@@ -57,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node_version: ${{ fromJson(needs.resolve_inputs.outputs.nodeVersions || '["18"]') }}
+        node_version: ${{ fromJson(needs.resolve_inputs.outputs.nodeVersions || '["20"]') }}
         os: ${{ fromJson(needs.resolve_inputs.outputs.os || '["ubuntu-latest"]') }}
 
     steps:
