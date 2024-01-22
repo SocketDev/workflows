@@ -95,7 +95,7 @@ jobs:
         run: echo "prefix=$(( $(date +%s) / 60 / 60 / 24 / 120 ))" >> $GITHUB_OUTPUT
 
       - name: Restore cache using package-lock.json hash
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ !inputs.no-lockfile }}
         with:
           path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
@@ -104,7 +104,7 @@ jobs:
             ${{ runner.os }}-node-${{ steps.npm-timed-expiration.outputs.prefix }}-
 
       - name: Restore cache using package.json hash
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         if: ${{ inputs.no-lockfile }}
         with:
           path: ${{ steps.npm-cache-dir-windows.outputs.dir || steps.npm-cache-dir.outputs.dir }}
