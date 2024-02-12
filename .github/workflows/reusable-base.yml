@@ -37,7 +37,6 @@ jobs:
   resolve_inputs:
     name: Resolving inputs
     runs-on: ubuntu-latest
-    if: ${{ inputs.os || inputs.node-versions}}
     outputs:
       os: ${{ steps.split-os.outputs.splitted }}
       nodeVersions: ${{ steps.split-node-versions.outputs.splitted }}
@@ -52,7 +51,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs:
       - resolve_inputs
-    if: ${{ always() }}
 
     strategy:
       fail-fast: false
