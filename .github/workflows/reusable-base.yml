@@ -63,17 +63,21 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: ${{ inputs.submodules }}
-        
 
     - name: Use Node.js ${{ matrix.node_version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node_version }}
 
+    - name: Set NPM version
+      id: npm-install
+      run: npm install -g npm@^11
+
     - name: Determine npm cache directory windows
       id: npm-cache-dir-windows
       if: runner.os == 'Windows'
       run: echo "dir=$(npm config get cache)" >> $env:GITHUB_OUTPUT
+
     - name: Determine npm cache directory non-windows
       id: npm-cache-dir
       if: runner.os != 'Windows'
