@@ -34,7 +34,7 @@ on:
         type: string
       submodules:
         default: false
-        description: 'From actions/checkout@v4'
+        description: 'From actions/checkout@v5'
         required: false
         type: string
 
@@ -73,7 +73,7 @@ jobs:
         ts_lib: ${{ fromJson(needs.resolve_inputs.outputs.tsLibs) }}
         ts_project: ${{ fromJson(needs.resolve_inputs.outputs.tsProjects) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v4
         with:
