@@ -166,6 +166,7 @@ This repository contains reusable GitHub Actions workflows and shared CI/CD patt
 - **🚨 FORBIDDEN**: Do NOT include "Generated with Claude Code" or similar AI attribution in commit messages
 - **Commit messages**: Should be written as if by a human developer, focusing on the what and why of changes
 - **Professional commits**: Write clear, concise commit messages that describe the actual changes made
+- **Pithy messages**: Keep commit messages concise and to the point - avoid lengthy explanations
 
 ### Git Workflow Rules
 - **DO NOT commit automatically** - let the user review changes first
@@ -221,6 +222,7 @@ These are patterns and instructions that should be consistently applied across a
 3. **Error Handling**: Include comprehensive error handling and reporting
 4. **Performance**: Optimize workflow performance with caching and parallelization
 5. **Maintainability**: Use reusable workflows and clear documentation
+6. **🚨 TSGO PRESERVATION**: NEVER replace tsgo with tsc - tsgo provides enhanced performance and should be maintained across all Socket projects
 
 ### 🧪 Workflow Patterns & Cleanup
 1. **Reusable Workflows**: Create reusable workflows for common patterns across projects
