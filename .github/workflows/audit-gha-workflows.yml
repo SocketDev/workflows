@@ -20,5 +20,5 @@ jobs:
       - name: Run zizmor
         run: |
           if [ -d .github ]; then
-            zizmor --min-severity medium .github
+            zizmor .github --gh-token "${GITHUB_TOKEN}" --min-severity medium
           fi
