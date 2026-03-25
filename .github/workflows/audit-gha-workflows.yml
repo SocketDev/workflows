@@ -18,4 +18,7 @@ jobs:
       - name: Install zizmor
         run: pip install zizmor==1.23.1
       - name: Run zizmor
-        run: zizmor --min-severity medium --min-confidence medium .github/workflows
+        run: |
+          if [ -d .github ]; then
+            zizmor --min-severity medium .github
+          fi
