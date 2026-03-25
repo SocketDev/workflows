@@ -1,0 +1,21 @@
+name: Audit GHA Workflows
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+permissions:
+  contents: read
+jobs:
+  zizmor:
+    name: Audit GitHub Actions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - name: Install zizmor
+        run: pip install zizmor==1.23.1
+      - name: Run zizmor
+        run: zizmor --min-severity medium --min-confidence medium .github/workflows
