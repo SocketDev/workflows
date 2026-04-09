@@ -1,0 +1,27 @@
+name: Setup and Install
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version'
+        required: false
+        type: string
+        default: '25.9.0'
+      working-directory:
+        description: 'Working directory for pnpm install'
+        required: false
+        type: string
+        default: '.'
+    secrets:
+      SOCKET_API_KEY:
+        description: 'Socket API key — when provided, uses sfw-enterprise instead of sfw-free'
+        required: false
+jobs:
+  setup-and-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: SocketDev/workflows/.github/actions/setup-and-install@feat/setup-and-install-workflow # zizmor: ignore[unpinned-uses]
+        with:
+          node-version: ${{ inputs.node-version }}
+          socket-api-key: ${{ secrets.SOCKET_API_KEY }} # zizmor: ignore[secrets-outside-env]
+          working-directory: ${{ inputs.working-directory }}
