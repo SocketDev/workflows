@@ -17,9 +17,22 @@ jobs:
           persist-credentials: false
       - name: Install zizmor
         run: pip install zizmor==1.23.1
+      - name: Create Patchpedia read token
+        if: github.repository == 'SocketDev/depscan'
+        id: patchpedia-token
+        uses: >-
+          actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          # The required workflow scans checkout data without executing it.
+          private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}  # zizmor: ignore[secrets-outside-env]
+          owner: SocketDev
+          repositories: patchpedia
+          permission-contents: read
       - name: Run zizmor
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: >-
+            ${{ steps.patchpedia-token.outputs.token || secrets.GITHUB_TOKEN }}
         run: |
           if [ -d .github ]; then
             zizmor .github --gh-token "${GITHUB_TOKEN}" --min-severity medium
