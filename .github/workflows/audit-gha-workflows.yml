@@ -15,11 +15,30 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+      - name: Create read-only audit token
+        id: audit-token
+        if: >-
+          ${{ vars.SOCKET_PR_CLIENT_ID != ''
+              && github.actor != 'dependabot[bot]'
+              && (github.event_name != 'pull_request'
+                  || github.event.pull_request.head.repo.full_name == github.repository) }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
+          private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }} # zizmor: ignore[secrets-outside-env]
+          owner: SocketDev
+          permission-contents: read
+      - name: Report token source
+        env:
+          MINTED: ${{ steps.audit-token.outcome == 'success' && steps.audit-token.outputs.token != '' }}
+        run: |
+          if [ "$MINTED" = "true" ]; then echo "audit token: minted"; else echo "audit token: fallback GITHUB_TOKEN"; fi
       - name: Install zizmor
         run: pip install zizmor==1.23.1
       - name: Run zizmor
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.audit-token.outputs.token || secrets.GITHUB_TOKEN }}
         run: |
           if [ -d .github ]; then
             zizmor .github --gh-token "${GITHUB_TOKEN}" --min-severity medium
