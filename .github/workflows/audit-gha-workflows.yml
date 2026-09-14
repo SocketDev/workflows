@@ -17,23 +17,39 @@ jobs:
           persist-credentials: false
       - name: Install zizmor
         run: pip install zizmor==1.23.1
-      - name: Create Patchpedia read token
-        if: github.repository == 'SocketDev/depscan'
-        id: patchpedia-token
-        uses: >-
-          actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
-        with:
-          client-id: ${{ vars.SOCKET_PR_CLIENT_ID }}
-          # The required workflow scans checkout data without executing it.
-          private-key: ${{ secrets.SOCKET_PR_APP_PRIVATE_KEY }}  # zizmor: ignore[secrets-outside-env]
-          owner: SocketDev
-          repositories: patchpedia
-          permission-contents: read
       - name: Run zizmor
         env:
-          GITHUB_TOKEN: >-
-            ${{ steps.patchpedia-token.outputs.token || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ -d .github ]; then
-            zizmor .github --gh-token "${GITHUB_TOKEN}" --min-severity medium
+          if [ ! -d .github ]; then
+            exit 0
           fi
+          if [[ "$GITHUB_REPOSITORY" != SocketDev/depscan || ! -f .github/zizmor-patches.yml ]]; then
+            zizmor .github --gh-token "$GITHUB_TOKEN" --min-severity medium
+            exit 0
+          fi
+
+          audit_dir=$(mktemp -d)
+          trap 'rm -rf "$audit_dir"' EXIT
+          cp -R .github "$audit_dir/.github"
+          for config in zizmor.yml zizmor.yaml; do
+            if [ -f "$config" ]; then
+              cp "$config" "$audit_dir/$config"
+            fi
+          done
+          patch_workflows=()
+          for workflow in deploy-patches-staging.yaml deploy-patches-prod.yaml patches-compatibility.yaml; do
+            workflow=".github/workflows/$workflow"
+            if [ -f "$workflow" ]; then
+              patch_workflows+=("$workflow")
+              rm "$audit_dir/$workflow"
+            fi
+          done
+
+          status=0
+          zizmor "$audit_dir/.github" --gh-token "$GITHUB_TOKEN" --min-severity medium || status=$?
+          if [ "${#patch_workflows[@]}" -gt 0 ]; then
+            zizmor "${patch_workflows[@]}" --config .github/zizmor-patches.yml \
+              --gh-token "$GITHUB_TOKEN" --min-severity medium || status=$?
+          fi
+          exit "$status"
