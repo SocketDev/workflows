@@ -7,6 +7,27 @@ on:
 permissions:
   contents: read
 jobs:
+  actions-lock:
+    name: Verify workflow dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install verified lockfile tool
+        run: |
+          set -euo pipefail
+          tool="$RUNNER_TEMP/gh-actions-lock"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/github/gh-actions-lock/releases/download/v0.2.0/linux-amd64 --output "$tool"
+          printf '%s  %s\n' 'd0588b09bb8fafbe096d27b284dfaac609a2ddbdc06415512c4ca2c685a883377d49dcd290d12378a1fe5ee0ddf1c396dabbd7632daac7d2f027910fc6581e16' "$tool" | sha512sum --check --strict
+          chmod +x "$tool"
+      - name: Verify workflow dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: '"$RUNNER_TEMP/gh-actions-lock" --verify --no-interactive --json --hostname github.com'
   zizmor:
     name: Audit GitHub Actions
     runs-on: ubuntu-latest
